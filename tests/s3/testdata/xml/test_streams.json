@@ -206,7 +206,7 @@
                 "destination_table": "s3_xml_test_table_olake",
                 "default_stream_properties":{
                     "normalization": false,
-                    "append_mode": false
+                    "append_mode": true
                 ,"update_type":"eq"}
             }
         }
