@@ -89,7 +89,7 @@ func (th *TestHandler) Iceberg2PCCDCRecovery(
 
 	var kafkaInsertRowCount *int
 	if th.TestConfig.Driver == string(constants.Kafka) {
-		kafkaInsertRowCount = ptr(5)
+		kafkaInsertRowCount = ptr(10)
 	}
 
 	twoPCCDCTestCases := []syncTestCase{
