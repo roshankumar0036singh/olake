@@ -114,6 +114,9 @@ func (th *TestHandler) isFilterInclusive() bool {
 		if v, ok := th.ExpectedData["col_bigint"]; ok && v == int64(111111111111111) {
 			return true
 		}
+		if v, ok := th.ExpectedData["col_decimal"]; ok && (v == testutils.Decimal("239835.89") || v == "239835.89") {
+			return true
+		}
 	}
 	return false
 }

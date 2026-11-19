@@ -71,6 +71,7 @@ func TestDefaultRowCount(t *testing.T) {
 		{"relational delete", &TestHandler{TestConfig: &testutils.TestConfig{Driver: "mysql"}}, "d", "delete", ptr(0)},
 		{"relational dedup", &TestHandler{TestConfig: &testutils.TestConfig{Driver: "mysql"}, DedupKeys: []string{"id"}}, "r", "", ptr(1)},
 		{"relational filter", &TestHandler{TestConfig: &testutils.TestConfig{Driver: "mysql"}, ExpectedData: map[string]interface{}{"id_bigint": int64(111111111111111)}}, "r", "", ptr(1)},
+		{"mssql filter", &TestHandler{TestConfig: &testutils.TestConfig{Driver: "mssql"}, ExpectedData: map[string]interface{}{"col_decimal": testutils.Decimal("239835.89")}}, "r", "", ptr(1)},
 		{"s3 full load", &TestHandler{TestConfig: &testutils.TestConfig{Driver: string(constants.S3)}}, "r", "", ptr(6)},
 		{"s3 update evolved", &TestHandler{TestConfig: &testutils.TestConfig{Driver: string(constants.S3)}}, "u", "update", ptr(6)},
 		{"s3 update no evolve", &TestHandler{TestConfig: &testutils.TestConfig{Driver: string(constants.S3), SkipSchemaEvolution: true}}, "u", "update", ptr(3)},
