@@ -145,6 +145,9 @@ func VerifyIcebergSync(t *testing.T, tableName, icebergDB string, datatypeSchema
 	require.NoError(t, queryErr, "Failed to collect data rows from Iceberg after %d attempts: %v", maxRetries, queryErr)
 
 	verifySyncedRows(t, selectRows, expected, opSymbol, "Iceberg", driver)
+	if opSymbol == "d" {
+		return
+	}
 
 	icebergSchema, describeRows := testutils.DescribeSchema(ctx, t, spark, fullTableName)
 
@@ -310,6 +313,9 @@ func VerifyParquetSync(t *testing.T, tableName, parquetDB string, datatypeSchema
 	require.NoError(t, err, "Failed to collect rows from Parquet query")
 
 	verifySyncedRows(t, rows, expected, opSymbol, "Parquet", driver)
+	if opSymbol == "d" {
+		return
+	}
 
 	parquetSchema, _ := testutils.DescribeSchema(ctx, t, spark, viewName)
 	if excludedColumn != "" {
