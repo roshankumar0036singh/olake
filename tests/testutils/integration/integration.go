@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strconv"
 	"testing"
 
 	"github.com/datazip-inc/olake/tests/testutils"
@@ -141,16 +140,7 @@ func (th *TestHandler) ExpectedRowsFor(
 		count = th.defaultRowCount(opSymbol, operation)
 	}
 
-	var rowsMap map[string]map[string]interface{}
-	if count != nil && *count > 0 && len(schema) > 0 {
-		rowsMap = make(map[string]map[string]interface{}, *count)
-		for i := 1; i <= *count; i++ {
-			rowsMap[strconv.Itoa(i)] = schema
-		}
-	}
-
 	return ExpectedRows{
-		Rows:                    rowsMap,
 		KeyColumn:               keyCol,
 		FallbackTemplate:        schema,
 		Count:                   count,

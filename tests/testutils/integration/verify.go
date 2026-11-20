@@ -360,7 +360,7 @@ func verifySyncedRows(
 	if opSymbol == "d" {
 		maxAllowed := 1
 		targetCount := expected.ResolveCount()
-		if targetCount != nil && *targetCount > 1 {
+		if targetCount != nil {
 			maxAllowed = *targetCount
 		}
 		require.LessOrEqualf(t, len(rows), maxAllowed, "Delete verification failed: got %d rows for _op_type = 'd', expected at most %d", len(rows), maxAllowed)
@@ -412,8 +412,7 @@ func verifySyncedRows(
 			if keyVal != nil {
 				expectedSchema = expected.Rows[fmt.Sprint(keyVal)]
 			}
-		}
-		if expectedSchema == nil {
+		} else {
 			expectedSchema = expected.FallbackTemplate
 		}
 

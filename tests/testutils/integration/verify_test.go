@@ -1,8 +1,6 @@
 package integration
 
 import (
-	"fmt"
-	"maps"
 	"testing"
 
 	"github.com/apache/spark-connect-go/v35/spark/sql/types"
@@ -15,9 +13,7 @@ func TestBinaryExpectations(t *testing.T) {
 	typeMapping := map[string]string{"binary(16)": "fixed[16]", "blob": "binary", "varchar": "string"}
 	declared := map[string]string{"data_fixed_binary": "binary(16)", "data_blob": "blob", "name": "varchar"}
 	want := map[string]string{"data_fixed_binary": "fixed[16]", "data_blob": "binary"}
-	if got := binaryExpectations(declared, typeMapping); !maps.Equal(got, want) {
-		t.Fatalf("binaryExpectations = %v, want %v", got, want)
-	}
+	require.Equal(t, want, binaryExpectations(declared, typeMapping))
 	for expected, spark := range map[string]string{"fixed[16]": "binary", "binary": "binary", "bigint": "bigint"} {
 		if got := sparkTypeOf(expected); got != spark {
 			t.Errorf("sparkTypeOf(%q) = %q, want %q", expected, got, spark)
@@ -91,14 +87,18 @@ func TestExpectedRowsFor(t *testing.T) {
 
 	rows := th.ExpectedRowsFor("r", "", schema, false)
 	require.Equal(t, ptr(5), rows.ResolveCount())
-	require.Len(t, rows.Rows, 5)
-	for i := 1; i <= 5; i++ {
-		require.Equal(t, schema, rows.Rows[fmt.Sprint(i)])
-	}
+	require.Empty(t, rows.Rows)
+	require.Equal(t, schema, rows.FallbackTemplate)
 
 	override := th.ExpectedRowsFor("r", "", schema, false, ptr(2))
 	require.Equal(t, ptr(2), override.ResolveCount())
-	require.Len(t, override.Rows, 2)
+	require.Empty(t, override.Rows)
+	require.Equal(t, schema, override.FallbackTemplate)
+
+	skipped := th.ExpectedRowsFor("r", "", schema, false, nil)
+	require.True(t, skipped.ResolveCount() == nil)
+	require.Empty(t, skipped.Rows)
+	require.Equal(t, schema, skipped.FallbackTemplate)
 }
 
 // mockRow implements types.Row for unit testing verifySyncedRows.
@@ -141,11 +141,46 @@ func TestVerifySyncedRows_MultiRowByKey(t *testing.T) {
 	verifySyncedRows(t, rows, expected, "r", "Iceberg", "mysql")
 }
 
+func TestVerifySyncedRows_FallbackTemplate(t *testing.T) {
+	rows := []types.Row{
+		mockRow{values: map[string]any{"_olake_id": "row-1", "id": int32(1), "name": "test"}},
+		mockRow{values: map[string]any{"_olake_id": "row-2", "id": int32(2), "name": "test"}},
+	}
+
+	expected := ExpectedRows{
+		FallbackTemplate: map[string]interface{}{"name": "test"},
+		Count:            ptr(2),
+	}
+
+	verifySyncedRows(t, rows, expected, "r", "Iceberg", "mysql")
+}
+
+func TestVerifySyncedRows_RowsOverridesFallback(t *testing.T) {
+	rows := []types.Row{
+		mockRow{values: map[string]any{"_olake_id": "row-1", "id": int32(1), "name": "alice"}},
+	}
+
+	expected := ExpectedRows{
+		Rows: map[string]map[string]interface{}{
+			"1": {"name": "alice"},
+		},
+		FallbackTemplate: map[string]interface{}{"name": "not-alice"},
+		KeyColumn:        "id",
+	}
+
+	verifySyncedRows(t, rows, expected, "r", "Iceberg", "mysql")
+}
+
 func TestVerifySyncedRows_Delete(t *testing.T) {
+	// 0 rows expected and 0 rows returned -> passes
 	verifySyncedRows(t, []types.Row{}, ExpectedRows{Count: ptr(0)}, "d", "Iceberg", "mysql")
 
+	// Tombstone row returned with explicit Count: ptr(1) -> passes
 	tombstone := []types.Row{
 		mockRow{values: map[string]any{"_olake_id": "tombstone-1"}},
 	}
-	verifySyncedRows(t, tombstone, ExpectedRows{Count: ptr(0)}, "d", "Iceberg", "mysql")
+	verifySyncedRows(t, tombstone, ExpectedRows{Count: ptr(1)}, "d", "Iceberg", "mysql")
+
+	// Default Count (nil) defaults to maxAllowed = 1 -> passes
+	verifySyncedRows(t, tombstone, ExpectedRows{}, "d", "Iceberg", "mysql")
 }
