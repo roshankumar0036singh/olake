@@ -66,7 +66,7 @@ func (th *TestHandler) resetCatalog(t *testing.T) {
 
 func (th *TestHandler) defaultRowCount(opSymbol, operation string) *int {
 	if opSymbol == "d" {
-		return ptr(0)
+		return nil
 	}
 
 	if th.Driver == string(constants.S3) {

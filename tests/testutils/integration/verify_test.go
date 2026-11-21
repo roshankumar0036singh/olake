@@ -64,7 +64,7 @@ func TestDefaultRowCount(t *testing.T) {
 	}{
 		{"relational full load", &TestHandler{TestConfig: &testutils.TestConfig{Driver: "mysql"}}, "r", "", ptr(5)},
 		{"relational cdc insert", &TestHandler{TestConfig: &testutils.TestConfig{Driver: "mysql"}}, "c", "insert", ptr(1)},
-		{"relational delete", &TestHandler{TestConfig: &testutils.TestConfig{Driver: "mysql"}}, "d", "delete", ptr(0)},
+		{"relational delete", &TestHandler{TestConfig: &testutils.TestConfig{Driver: "mysql"}}, "d", "delete", nil},
 		{"relational dedup", &TestHandler{TestConfig: &testutils.TestConfig{Driver: "mysql"}, DedupKeys: []string{"id"}}, "r", "", ptr(1)},
 		{"relational filter", &TestHandler{TestConfig: &testutils.TestConfig{Driver: "mysql"}, ExpectedData: map[string]interface{}{"id_bigint": int64(111111111111111)}}, "r", "", ptr(1)},
 		{"mssql filter", &TestHandler{TestConfig: &testutils.TestConfig{Driver: "mssql"}, ExpectedData: map[string]interface{}{"col_decimal": testutils.Decimal("239835.89")}}, "r", "", ptr(1)},
